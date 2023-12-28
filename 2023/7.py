@@ -25,7 +25,7 @@ VALUES = {
 class Hand:
     cards: Counter
     bid: int
-    value: int
+    value: float
 
 
 def solution():
@@ -35,29 +35,35 @@ def solution():
 
     total_value = 0
     sorted_hand = sorted(hands, key=lambda it: it.value)
-    for i, it in enumerate(sorted(hands, key=lambda it: it.value)):
-        total_value += it.bid * (i+1)
+    i = 0
+    prev_value = 0
+    for it in sorted(hands, key=lambda it: it.value):
+        if it.value > prev_value:
+            i += 1
+            prev_value = it.value
+
+        total_value += it.bid * i
     return total_value
 
 
 def parse_hand(line):
     cards, bid = line.split(' ')
-    cards = Counter(cards)
-    value = count_value(cards)
+    cards_counter = Counter(cards)
+    value = count_value(cards_counter, cards)
     return Hand(value=value, bid=int(bid), cards=cards)
 
 
-def count_value(cards: Counter):
-    if value := count_fives(cards):
-        return value * pow(100, 6)
-
-    if value := count_fours(cards):
+def count_value(cards_counter: Counter, cards: str):
+    if value := count_fives(cards_counter, cards):
         return value * pow(100, 5)
 
-    if value := count_three(cards):
-        return value * pow(100, 3)
+    if value := count_fours(cards_counter, cards):
+        return value * pow(100, 4)
 
-    if value := count_two(cards):
+    if value := count_three(cards_counter, cards):
+        return value * pow(100, 2)
+
+    if value := count_two(cards_counter, cards):
         return value * pow(100, 1)
 
     return count_ones(cards)
@@ -74,7 +80,7 @@ def count_fives(cards: Counter):
 def count_fours(cards: Counter):
     most_common, second_most_common = cards.most_common(2)
     if most_common[1] == 4:
-        return VALUES[most_common[0]] * 2 + VALUES[second_most_common[0]]
+        return VALUES[most_common[0]] * 50 + VALUES[second_most_common[0]]
 
     return 0
 
@@ -84,9 +90,9 @@ def count_three(cards: Counter):
     if most_common[0][1] == 3:
         value = VALUES[most_common[0][0]] * 100
         if most_common[1][1] == 2:
-            value += VALUES[most_common[1][0]] * 50 + sum([VALUES[it[0]] for it in most_common[2:]])
+            value += VALUES[most_common[1][0]] * 50
         else:
-            value += sum([VALUES[it[0]] for it in most_common[1:]])
+            value += count_ones(most_common[1:])
         return value
 
     return 0
@@ -95,19 +101,23 @@ def count_three(cards: Counter):
 def count_two(cards: Counter):
     most_common = cards.most_common()
     if most_common[0][1] == 2:
-        value = VALUES[most_common[0][0]] * 100
+        value = VALUES[most_common[0][0]]
         if most_common[1][1] == 2:
-            value += VALUES[most_common[1][0]] * 50 + VALUES[most_common[2][0]]
+            second_value = VALUES[most_common[1][0]]
+            if value > second_value:
+                value = value * 100 + second_value + 50 + VALUES[most_common[2][0]]
+            else:
+                value = value * 50 + second_value + 100 + VALUES[most_common[2][0]]
         else:
-            value += sum([VALUES[it[0]] for it in most_common[1:]])
+            value = value * 100 + count_ones(most_common[1:])
         return value
 
     return 0
 
 
-def count_ones(cards: Counter):
-    return max(cards.keys())
-
+def count_ones(cards: str):
+    # return sum([it / pow(100, i) for i, it in enumerate(sorted([VALUES[it[0]] for it in cards], reverse=True))])
+    return sum([it / pow(100, i) for i, it in enumerate(cards)])
 
 
 print(solution())
