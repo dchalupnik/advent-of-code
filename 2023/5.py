@@ -1,5 +1,4 @@
 import typing as tp
-from dataclasses import dataclass
 
 from utils import read_file
 
