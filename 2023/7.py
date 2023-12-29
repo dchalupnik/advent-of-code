@@ -45,14 +45,14 @@ def solution():
     return total_value
 
 
-def parse_hand(line):
+def parse_hand(line: str) -> Hand:
     cards, bid = line.split(' ')
     cards_counter = Counter(cards)
     value = count_value(cards_counter, cards)
     return Hand(value=value, bid=int(bid), cards=cards)
 
 
-def count_value(cards_counter: Counter, cards: str):
+def count_value(cards_counter: Counter, cards: str) -> int:
     most_common_values_no_j = [it[1] for it in Counter(cards.replace('J', '')).most_common()]
     j_count = cards_counter.get('J', 0)
 
